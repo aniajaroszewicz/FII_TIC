@@ -2,5 +2,5 @@
 
 
 This project is a collaboration between FII and the Harvard eval team. The code in this repository is used to 
-a) host code written by the eval team that FII can then use to pull data from Ania's qualtrics account to remind people to complete the survey and pay them when they do;
+a) host code written by the eval team that FII can then use to pull data from Ania's Qualtrics account to remind people to complete the survey and pay them when they do;
 b) collaborate in analysis across the eval team members. 
