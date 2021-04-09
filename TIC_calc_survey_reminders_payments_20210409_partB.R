@@ -36,7 +36,7 @@ survey_responses <- survey_responses %>%
   mutate(recorded_date=as_date(recorded_datetime))
 
 #Sort/arrange the variables
-responses_all_uuids <- responses_all_uuids %>%
+survey_responses <- survey_responses %>%
   arrange(wave, t, recorded_date)
 
 
