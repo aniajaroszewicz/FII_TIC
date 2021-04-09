@@ -37,7 +37,7 @@ survey_responses <- survey_responses %>%
 
 #Sort/arrange the variables
 survey_responses <- survey_responses %>%
-  arrange(wave, t, recorded_date)
+  arrange(entity_uuid, t, recorded_date)
 
 
 
