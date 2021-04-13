@@ -46,6 +46,11 @@ survey_responses <- survey_responses %>%
 #Load uuids file from GitHub
 full_uuids <- read.csv("https://raw.githubusercontent.com/aniajaroszewicz/FII_TIC/main/fake_entity_uuids.csv", header = TRUE, sep=",") #This will later be updated with a complete list of all ACTIVE uuids and their wave # (ie, adding new waves as they come in and dropping people who have left the trial). When doing so, use the 'raw' form of the file
 
+#Rename variable names to address fact that sometimes-- but not always-- they read in funny
+newvarnames <- c("entity_uuid", "wave")
+cbind(names(full_uuids), newvarnames) #compare old variable names with new names to make sure you're mapping it correctly
+names(full_uuids) <- newvarnames
+
 #For each uuid, create 7 rows, 1 for each t (0,3,6,9,12,15,18). This will later help us have a complete picture of who has data for each time period, and who does not. 
 full_uuids <- uncount(full_uuids, 7) #copies each row 7x
 full_uuids <- full_uuids %>% 
