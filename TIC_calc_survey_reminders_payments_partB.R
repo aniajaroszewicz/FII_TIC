@@ -1,6 +1,6 @@
 #FII/UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 13 May 2021
+#Last updated: 5 May 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_[date]_partA.R (sent to the FII survey admin team). 
@@ -41,10 +41,17 @@ survey_responses <- survey_responses %>%
 
 
 
-# MERGE WITH FULL LIST OF UUID'S ----
+# MERGE WITH LIST OF UUID'S ----
 
 #Load uuids file from GitHub
-full_uuids <- read.csv("https://raw.githubusercontent.com/aniajaroszewicz/FII_TIC/main/fake_entity_uuids.csv", header = TRUE, sep=",") #This will later be updated with a complete list of all ACTIVE uuids and their wave # (ie, adding new waves as they come in and dropping people who have left the trial). When doing so, use the 'raw' form of the file
+  #Typically, you'll want to use the full list of active enrollees
+  #But if the t survey that we want reminders/payments for is t0, those people won't yet be on the list of active enrollees. So, you need to use the list of people who are approved by not yet enrolled for that wave (sent to eval team from engineering team) and posted by Ania onto her github page. Note that the code should break if she hasn't posted the file.
+  if(tnum==0) {
+    approved_not_yet_enrolled_filename <- paste0("https://raw.githubusercontent.com/aniajaroszewicz/FII_TIC/main/wave", wavenum, "_approved_uuids.csv")
+    full_uuids <- read.csv(approved_not_yet_enrolled_filename, header = TRUE, sep=",")
+   } else {
+     full_uuids <- read.csv("https://raw.githubusercontent.com/aniajaroszewicz/FII_TIC/main/actively_enrolled_entity_uuids_fake.csv", header = TRUE, sep=",") #This will later be updated with a complete list of all ACTIVE uuids and their wave # (ie, adding new waves as they come in and dropping people who have left the trial). When doing so, use the 'raw' form of the file
+   } 
 
 #Rename variable names to address fact that sometimes-- but not always-- they read in funny
 newvarnames <- c("entity_uuid", "wave")
