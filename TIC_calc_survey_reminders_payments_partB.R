@@ -110,7 +110,7 @@ responses_all_uuids <- responses_all_uuids %>%
 
 #Create a flag for if someone needs payment. If the date on which the survey was completed was <= 14 days since it was sent, and if today is 15+ days since the wave-t email has been sent, needpayment=Yes/1. Otherwise, it's =No/0.  
 responses_all_uuids <- responses_all_uuids %>%
-  mutate(needs_payment = as.numeric(ifelse(completion_time>-1 & completion_time<=14 & finished==1 & time_since_sent>=15, 1, 0))) %>%
+  mutate(needs_payment = as.numeric(ifelse(completion_time>=-1 & completion_time<=14 & finished==1 & time_since_sent>=15, 1, 0))) %>%
   mutate(needs_payment = ifelse(is.na(needs_payment) == TRUE, 0, needs_payment)) #turn any NA's into 0 for future min/max functions
 
 #Copy over the most conservative value of needreminder and needpayment, erring on the side of paying and not reminding. Take the SMALLEST value of 'needs_reminder' (NO<YES) and the LARGEST value of 'needs_payment' (NO<YES) and replace all rows for that entity_uuid-t combo with the corresponding value.
