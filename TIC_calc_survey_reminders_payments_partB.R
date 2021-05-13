@@ -88,8 +88,8 @@ responses_all_uuids <- responses_all_uuids %>%
 #Add in the date the survey was sent (for the given wave-t) (based on Ania's records) and calculate how long it took someone to complete the survey (if it was sent and they completed it at all). Sent date will be missing if we have not yet sent a survey. Completion time will be missing if recorded_date is missing. Ania will add lines to this each time a wave gets a new t survey (and replace these fake values with real ones).
 responses_all_uuids <- responses_all_uuids %>%
   mutate(sent_date = case_when(
-                      wave == 1 & t == 0 ~ ymd(20210315),
-                      wave == 1 & t == 3 ~ ymd(20210320),
+                      wave == 99 & t == 0 ~ ymd(20210404),
+                      wave == 99 & t == 3 ~ ymd(20210410),
                       wave == 2 & t == 0 ~ ymd(20210325),
                       wave == 2 & t == 3 ~ ymd(20210326),
                       wave == 2 & t == 6 ~ ymd(20210327),
@@ -108,9 +108,9 @@ responses_all_uuids <- responses_all_uuids %>%
          needs_reminder = as.numeric(ifelse(between(time_since_sent, 0, 14) == TRUE & finished == 0, 1, 0))) %>%
   mutate(needs_reminder = ifelse(is.na(needs_reminder) == TRUE, 0, needs_reminder)) #turn any NA's into 0 for future min/max functions
 
-#Create a flag for if someone needs payment. If today is 15+ days since the wave-t email has been sent and they have finished, needpayment=Yes/1. Otherwise, it's =No/0.  
+#Create a flag for if someone needs payment. If the date on which the survey was completed was <= 14 days since it was sent, and if today is 15+ days since the wave-t email has been sent, needpayment=Yes/1. Otherwise, it's =No/0.  
 responses_all_uuids <- responses_all_uuids %>%
-  mutate(needs_payment = as.numeric(ifelse(time_since_sent>=15 & finished == 1, 1, 0))) %>%
+  mutate(needs_payment = as.numeric(ifelse(completion_time>-1 & completion_time<=14 & finished==1 & time_since_sent>=15, 1, 0))) %>%
   mutate(needs_payment = ifelse(is.na(needs_payment) == TRUE, 0, needs_payment)) #turn any NA's into 0 for future min/max functions
 
 #Copy over the most conservative value of needreminder and needpayment, erring on the side of paying and not reminding. Take the SMALLEST value of 'needs_reminder' (NO<YES) and the LARGEST value of 'needs_payment' (NO<YES) and replace all rows for that entity_uuid-t combo with the corresponding value.
