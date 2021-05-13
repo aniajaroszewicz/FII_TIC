@@ -1,6 +1,6 @@
 #FII/UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 5 May 2021
+#Last updated: 13 May 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_[date]_partA.R (sent to the FII survey admin team). 
@@ -138,7 +138,8 @@ responses_all_uuids <- responses_all_uuids %>%
 responses_all_uuids <- responses_all_uuids %>% 
   mutate(payment_amount=case_when(
     needs_payment=="Yes" & t==0 ~ "$60",
-    needs_payment=="Yes" & t>0 ~ "$40"))
+    needs_payment=="Yes" & t>0 & t<18 ~ "$40",
+    needs_payment=="Yes" & t==18 ~ "$100"))
 
 #Order the rows, select and order the columns, and export the whole file with today's date (yyyy-mm-dd)
 final_output <- responses_all_uuids %>%
