@@ -1,6 +1,6 @@
 #FII/UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 5 May 2021
+#Last updated: 18 May 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_[date]_partA.R (sent to the FII survey admin team). 
@@ -20,7 +20,7 @@ survey_responses <- raw_survey_responses %>%
 
 #Select the variables of interest, put them in the desired order, and rename them
 survey_responses <- survey_responses %>%
-  select(entity_uuid,
+  dplyr::select(entity_uuid,
          t,
          finished = sawlastpage,
          recorded_datetime = RecordedDate)
@@ -83,7 +83,7 @@ responses_all_uuids <- responses_all_uuids %>%
 #Arrange responses and reorder variables
 responses_all_uuids <- responses_all_uuids %>%
   arrange(wave, entity_uuid, t) %>% # order of rows
-  select(entity_uuid, wave, t, everything()) # order of columns
+  dplyr::select(entity_uuid, wave, t, everything()) # order of columns
 
 #Add in the date the survey was sent (for the given wave-t) (based on Ania's records) and calculate how long it took someone to complete the survey (if it was sent and they completed it at all). Sent date will be missing if we have not yet sent a survey. Completion time will be missing if recorded_date is missing. Ania will add lines to this each time a wave gets a new t survey (and replace these fake values with real ones).
 responses_all_uuids <- responses_all_uuids %>%
@@ -94,7 +94,8 @@ responses_all_uuids <- responses_all_uuids %>%
                       wave == 2 & t == 3 ~ ymd(20210326),
                       wave == 2 & t == 6 ~ ymd(20210327),
                       wave == 2 & t == 9 ~ ymd(20210328),
-                      wave == 4 & t == 15 ~ ymd(20210402)),
+                      wave == 4 & t == 15 ~ ymd(20210402),
+                      wave == 0 & t == 0 ~ ymd(20210419)),
          completion_time = recorded_date - sent_date)
 
 
@@ -151,7 +152,7 @@ responses_all_uuids <- responses_all_uuids %>%
 #Order the rows, select and order the columns, and export the whole file with today's date (yyyy-mm-dd)
 final_output <- responses_all_uuids %>%
   arrange(wave, t, entity_uuid) %>% # order of rows
-  select(entity_uuid, wave, t, sent_date, finished, recorded_date, needs_reminder, needs_payment, payment_amount) # order of columns
+  dplyr::select(entity_uuid, wave, t, sent_date, finished, recorded_date, needs_reminder, needs_payment, payment_amount) # order of columns
 todaysdate <- today()
 filenameall <- paste0("TIC_survey_reminders_payments_all_", todaysdate, ".csv")
 write_csv(final_output, filenameall)
