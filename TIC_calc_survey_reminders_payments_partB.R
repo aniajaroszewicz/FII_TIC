@@ -95,7 +95,7 @@ responses_all_uuids <- responses_all_uuids %>%
                       wave == 2 & t == 6 ~ ymd(20210327),
                       wave == 2 & t == 9 ~ ymd(20210328),
                       wave == 4 & t == 15 ~ ymd(20210402),
-                      wave == 0 & t == 0 ~ ymd(20210419)),
+                      wave == 0 & t == 0 ~ ymd(20210519)),
          completion_time = recorded_date - sent_date)
 
 
