@@ -23,13 +23,8 @@ survey_responses <- survey_responses %>%
   dplyr::select(entity_uuid,
          t,
          finished = sawlastpage,
-         recorded_datetime = RecordedDate)
-
-#Expand the definition of completion: also allow finished=1 if there is a recordeddate. Replace NA's with 0's.
-survey_responses <- survey_responses %>%
-  mutate(finished = case_when(
-    !is.na(survey_responses$recorded_datetime) ~ 1,
-    is.na(finished) ~ 0)) #later check this; right now there are no responses where there's a sawlastpage=1 but no recorded date; this will happen after like a month of the survey being open.
+         recorded_datetime = RecordedDate) %>%
+  mutate(finished = ifelse(is.na(finished), 0, 1)) 
 
 #Pull out just the date from the recorded datetime variable
 survey_responses <- survey_responses %>% 
