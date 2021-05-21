@@ -155,6 +155,7 @@ final_output_filtered <- final_output %>%
 filenamefiltered <- paste0("TIC_survey_reminders_payments_wave", wavenum, "_t", tnum, "_", todaysdate, ".csv")
 write_csv(final_output_filtered, filenamefiltered)
 
+print("You're done! Now just check your folder for the files.")
 
 #THINGS ANIA WILL DO AFTER LAUNCH ----
 # -Delete all test responses (drop everything that happened before a certain date, all the fake uuid's, all the fp=1 values)
