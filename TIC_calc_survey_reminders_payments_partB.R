@@ -28,10 +28,7 @@ survey_responses <- survey_responses %>%
 
 #Pull out just the date from the recorded datetime variable
 survey_responses <- survey_responses %>% 
-  mutate(recorded_date=as_date(recorded_datetime))
-
-#Sort/arrange the variables
-survey_responses <- survey_responses %>%
+  mutate(recorded_date=as_date(recorded_datetime)) %>%
   arrange(entity_uuid, t, recorded_date)
 
 
