@@ -1,6 +1,6 @@
 #FII/UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 18 May 2021
+#Last updated: 20 May 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_[date]_partA.R (sent to the FII survey admin team). 
@@ -26,7 +26,7 @@ survey_responses <- survey_responses %>%
          recorded_datetime = RecordedDate) %>%
   mutate(finished = ifelse(is.na(finished), 0, 1)) 
 
-#Pull out just the date from the recorded datetime variable
+#Pull out just the date from the recorded datetime variable; arrange
 survey_responses <- survey_responses %>% 
   mutate(recorded_date=as_date(recorded_datetime)) %>%
   arrange(entity_uuid, t, recorded_date)
@@ -42,7 +42,7 @@ survey_responses <- survey_responses %>%
     approved_not_yet_enrolled_filename <- paste0("https://raw.githubusercontent.com/aniajaroszewicz/FII_TIC/main/wave", wavenum, "_approved_uuids.csv")
     full_uuids <- read.csv(approved_not_yet_enrolled_filename, header = TRUE, sep=",")
    } else {
-     full_uuids <- read.csv("https://raw.githubusercontent.com/aniajaroszewicz/FII_TIC/main/actively_enrolled_entity_uuids_fake.csv", header = TRUE, sep=",") #This will later be updated with a complete list of all ACTIVE uuids and their wave # (ie, adding new waves as they come in and dropping people who have left the trial). When doing so, use the 'raw' form of the file
+     full_uuids <- read.csv("https://raw.githubusercontent.com/aniajaroszewicz/FII_TIC/main/tic_actively_enrolled.csv", header = TRUE, sep=",") #This will later be updated with a complete list of all ACTIVE uuids and their wave # (ie, adding new waves as they come in and dropping people who have left the trial). When doing so, use the 'raw' form of the file
    } 
 
 #Rename variable names to address fact that sometimes-- but not always-- they read in funny
