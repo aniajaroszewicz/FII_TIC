@@ -16,7 +16,7 @@
 # CLEAN RAW QUALTRICS DATA: DELETE INVALID RESPONSES, UNWANTED VARIABLES  ----
 #Take the raw Qualtrics data that was run in Part A. Keep only observations that are not preview and test responses, those that are not missing an entity_uuid, and those that did not say that they got the link from someone other than FII. Later add to this all the test responses(entity_uuid=ania1234 or test, birthyear=1990, etc.)
 survey_responses <- raw_survey_responses %>% 
-  filter(Status!="Survey Preview" & entity_uuid!="NA" & LINKSOURCE!="From someone else")
+  filter(Status!="Survey Preview" & entity_uuid!="NA" & LINKSOURCE!="From someone else" & t!="NA")
 
 #Select the variables of interest, put them in the desired order, and rename them
 survey_responses <- survey_responses %>%
