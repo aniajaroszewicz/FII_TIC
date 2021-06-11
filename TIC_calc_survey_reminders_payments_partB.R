@@ -128,9 +128,12 @@ need_reminderlink_payment <- need_reminderlink_payment %>%
 
 # EXPORT THE DATA ----
 
-#Turn numeric needs_reminder and needs_payment variables to be more user-friendly "yes" and "no" values
+#Turn numeric variables to more user-friendly "yes" and "no" values
 need_reminderlink_payment <- need_reminderlink_payment %>% 
-  mutate(needs_reminder=case_when(
+  mutate(finished=case_when(
+           finished==0 ~ "No",
+           finished==1 ~ "Yes"),
+         needs_reminder=case_when(
           needs_reminder==0 ~ "No",
           needs_reminder==1 ~ "Yes"),
          needs_payment=case_when(
@@ -146,8 +149,8 @@ need_reminderlink_payment <- need_reminderlink_payment %>%
 
 #Order the rows, select and order the columns, and export the whole file with today's date (yyyy-mm-dd)
 final_output <- need_reminderlink_payment %>%
-  arrange(wave, t, entity_uuid) %>% # order of rows
-  dplyr::select(entity_uuid, wave, t, sent_date, finished, recorded_date, needs_reminder, unique_link, needs_payment, payment_amount) # order of columns
+  arrange(wave, entity_uuid, t) %>% 
+  dplyr::select(entity_uuid, wave, t, sent_date, finished, recorded_date, needs_reminder, unique_link, needs_payment, payment_amount) 
 todaysdate <- today()
 filenameall <- paste0("TIC_survey_reminders_payments_all_", todaysdate, ".csv")
 write_csv(final_output, filenameall)
