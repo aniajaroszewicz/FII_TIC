@@ -1,9 +1,9 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 9 June 2021
+#Last updated: 18 June 2021
 
 
-#Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_[date]_partA.R (sent to the UpTogether survey admin team). 
+#Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
 #PartA code (run before this file is called):
 #(1) Pulls survey data from Qualtrics (the survey platform on which we are collecting data for TIC), a list of dates on which surveys were sent, and a list of links that reflect who 'should have' gotten the survey and what link they should have completed
 #Part B code (this):
@@ -13,9 +13,9 @@
 
 
 # CLEAN RAW QUALTRICS DATA: DELETE INVALID RESPONSES, UNWANTED VARIABLES  ----
-#Take the raw Qualtrics data that was run in Part A. Keep only observations that are not preview and test responses, those that are not missing an entity_uuid, and those that did not say that they got the link from someone other than FII. 
+#Take the raw Qualtrics data that was run in Part A. Keep only observations that are not preview and test responses, those that are not missing an entity_uuid or t. Note that those who said they got the link from someone other than TIC/UT get routed in Qualtrics, and are pulled out below because they never "sawlastpage." 
 survey_responses <- raw_survey_responses %>% 
-  filter(Status!="Survey Preview" & entity_uuid!="NA" & LINKSOURCE!="From someone else" & t!="NA")
+  filter(Status!="Survey Preview" & entity_uuid!="NA" & t!="NA")
 
 #Select the variables of interest, put them in the desired order, and rename them
 survey_responses <- survey_responses %>%
@@ -133,7 +133,7 @@ need_reminderlink_payment <- need_reminderlink_payment %>%
   mutate(finished=case_when(
            finished==0 ~ "No",
            finished==1 ~ "Yes"),
-         needs_reminder=case_when(
+        needs_reminder=case_when(
           needs_reminder==0 ~ "No",
           needs_reminder==1 ~ "Yes"),
          needs_payment=case_when(
