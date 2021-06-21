@@ -116,11 +116,13 @@ need_reminder_payment <- need_reminder_payment %>%
   ungroup()
 
 #Do some tests: 
-stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$finished==0 & need_reminder_payment$needs_reminder==1) |
-            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$finished==1 & need_reminder_payment$needs_reminder==0) | 
+stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & need_reminder_payment$finished==0 & need_reminder_payment$needs_reminder==1) |
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & need_reminder_payment$finished==1 & need_reminder_payment$needs_reminder==0) | 
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent>14 & need_reminder_payment$needs_reminder==0) |
             is.na(need_reminder_payment$sent_date)==TRUE)
-stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & is.na(need_reminder_payment$recorded_date)==TRUE & need_reminder_payment$needs_reminder==1) |
-            (is.na(need_reminder_payment$sent_date)==FALSE & is.na(need_reminder_payment$recorded_date)==FALSE & need_reminder_payment$needs_reminder==0) | 
+stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & is.na(need_reminder_payment$recorded_date)==TRUE & need_reminder_payment$needs_reminder==1) |
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & is.na(need_reminder_payment$recorded_date)==FALSE & need_reminder_payment$needs_reminder==0) | 
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent>14 & need_reminder_payment$needs_reminder==0) |
             is.na(need_reminder_payment$sent_date)==TRUE)
 stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$finished==1 & need_reminder_payment$completion_time>=-1 & need_reminder_payment$completion_time<=14 & need_reminder_payment$time_since_sent>=15 & need_reminder_payment$needs_payment==1) |
             need_reminder_payment$needs_payment==0)
