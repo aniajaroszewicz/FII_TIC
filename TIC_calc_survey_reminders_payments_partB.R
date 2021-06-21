@@ -141,6 +141,9 @@ need_reminderlink_payment <- left_join(need_reminder_payment, links, by=c("entit
 need_reminderlink_payment <- need_reminderlink_payment %>%
   mutate(unique_link=ifelse(needs_reminder==0, NA, unique_link))
 
+#Do a test to make sure there is consistency in reminder and link columns
+stopifnot(need_reminderlink_payment$needs_reminder==0 & is.na(need_reminderlink_payment$unique_link)==TRUE |
+            need_reminderlink_payment$needs_reminder==1 & is.na(need_reminderlink_payment$unique_link)==FALSE)
 
 # EXPORT THE DATA ----
 
