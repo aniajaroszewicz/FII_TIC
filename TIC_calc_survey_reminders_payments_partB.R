@@ -1,6 +1,6 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 21 June 2021
+#Last updated: 24 June 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
@@ -180,4 +180,13 @@ final_output_filtered <- final_output %>%
 filenamefiltered <- paste0("TIC_survey_reminders_payments_wave", wavenum, "_t", tnum, "_", todaysdate, ".csv")
 write_csv(final_output_filtered, filenamefiltered)
 
+#Print some summary messages for easy data checking: 
+print(paste0("For wave", wavenum, " and t", tnum, ":"))
+print(paste0("Number of people getting the survey: ", n_distinct(final_output_filtered$entity_uuid)))
+print(paste0("First survey completion: ", min(final_output_filtered$recorded_date, na.rm=TRUE))) 
+print(paste0("Last survey completion: ", max(final_output_filtered$recorded_date, na.rm=TRUE)))
+print(paste0("Number of people who do not need a reminder: ", sum(final_output_filtered$needs_reminder == "No")))
+print(paste0("Number of people who need a reminder: ", sum(final_output_filtered$needs_reminder == "Yes")))
+print(paste0("Number of people who do not need payment: ", sum(final_output_filtered$needs_payment == "No")))
+print(paste0("Number of people who need payment: ", sum(final_output_filtered$needs_payment == "Yes")))
 print("You're done! Now just check your folder for the files.")
