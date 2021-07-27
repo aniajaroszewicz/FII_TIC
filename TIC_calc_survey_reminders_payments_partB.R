@@ -1,6 +1,6 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 24 June 2021
+#Last updated: 27 July 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
@@ -35,10 +35,17 @@ survey_responses <- survey_responses %>%
   arrange(entity_uuid, t, recorded_date)
 
 
-# IDENTIFY THE VALID UUIDS FOR THIS T/WAVE, PREPARE DATAFRAME SKELETON FOR INPUTTING DATA, JOIN WITH SURVEY RESPONSES ----
+# IDENTIFY THE VALID UUIDS [ESP FOR THIS T/WAVE], PREPARE DATAFRAME SKELETON FOR INPUTTING DATA, JOIN WITH SURVEY RESPONSES ----
 
-#Identify everyone who is on the list of links you've pulled -- i.e., everyone who 'should' be responding to a survey this round. If it's a t0 survey, these will be people who are approved but not yet enrolled. If it's a t3+ survey, they are people who are randomized and enrolled and as far as we know, still enrolled in the trial 
-valid_uuids <- links %>%
+
+#Identify everyone who 'should' be responding to a survey this round (and/or has previously been randomized so we have a comprehensive view of who is where in the trial). If it's a t0 survey in question, the links list will only include people who are on that list (who have been approved but not yet enrolled), and thus we need to supplement the list with everyone who has previously been randomized so we can have that comprehensive view. If it's a t3+ survey in question, it already includes everyone who has previously been randomized (and, as far as we know, are still enrolled in the trial), so there's no need to supplement further. 
+if(tnum==0){
+  valid_uuids <- bind_rows(links, all_randomized_to_date)
+} else {
+  valid_uuids <- links
+}
+
+valid_uuids <- valid_uuids %>%
   group_by(entity_uuid) %>%
   distinct(entity_uuid, .keep_all=TRUE) %>%
   ungroup() %>%
@@ -78,7 +85,7 @@ responses_all_uuids <- responses_all_uuids %>%
 sent_dates <- sent_dates %>%
   mutate(sent_date = as.Date(sent_date, format="%m/%d/%y"))
 
-#Join with the list of sent_dates to identify when a give wavenum got its tnum survey. Sent date will be missing if we have not yet sent a survey (or Ania messed up and didn't put it into the gsheet).
+#Join with the list of sent_dates to identify when a given wavenum got its tnum survey. Sent date will be missing if we have not yet sent a survey (or Ania messed up and didn't put it into the gsheet).
 responses_all_uuids_sentdates <- left_join(responses_all_uuids, sent_dates, by=c("wave", "t"))
 
 #Calculate how long it took someone to complete a survey. Completion time will be missing if recorded_date is missing or if sent_date is missing. 
@@ -88,18 +95,23 @@ responses_all_uuids_sentdates <- responses_all_uuids_sentdates %>%
 
 # CALCULATE WHO NEEDS REMINDERS, WHO NEEDS PAYMENTS ----
 
-#Create a flag for if someone needs a reminder. If they didn't finish (meaning: they did not get to the last page [NOT "they don't have a recorded date"]), and today is <=14 days from the surveysentdate, then needs_reminder should be =Yes/1. Otherwise, it's =No/0.
+#Create a flag for if someone needs a reminder. If they didn't finish (meaning: they did not get to the last page [NOT "they don't have a recorded date"]), and today is <=14 days from the surveysentdate, then needs_reminder should be =Yes/1. Otherwise, it's =No/0. Also create a flag for if someone needs payment. If the survey is finished, and if the date on which the survey was completed was <= 14 days since it was sent, and if today is 15+ days since the wave-t email has been sent, needpayment=Yes/1. Otherwise, it's =No/0.  (Note that we're making a special exception for wave1 t0, which had a shorter than usual survey window of only 13 days.)
 today() #Look at what "today" is; make sure is right
-need_reminder_payment <- responses_all_uuids_sentdates %>%
-  mutate(time_since_sent = as.numeric(today() - sent_date), #evaluates to NA if sent_date is missing (eg bc not yet sent)
-         finished = ifelse(is.na(finished), 0, finished), #turn NA's into 0 again [needed bc of merge above]
-         needs_reminder = as.numeric(ifelse(between(time_since_sent, -1, 14) == TRUE & finished == 0, 1, 0))) %>%
-  mutate(needs_reminder = ifelse(is.na(needs_reminder) == TRUE, 0, needs_reminder)) #turn any NA's into 0 for future min/max functions
 
-#Create a flag for if someone needs payment. If the survey is finished, and if the date on which the survey was completed was <= 14 days since it was sent, and if today is 15+ days since the wave-t email has been sent, needpayment=Yes/1. Otherwise, it's =No/0.  
-need_reminder_payment <- need_reminder_payment %>%
-  mutate(needs_payment = as.numeric(ifelse(finished==1 & completion_time>=-1 & completion_time<=14 & time_since_sent>=15, 1, 0))) %>%
-  mutate(needs_payment = ifelse(is.na(needs_payment) == TRUE, 0, needs_payment)) #turn any NA's into 0 for future min/max functions
+  need_reminder_payment <- responses_all_uuids_sentdates %>%
+    mutate(time_since_sent = as.numeric(today() - sent_date), #evaluates to NA if sent_date is missing (eg bc not yet sent)
+           finished = ifelse(is.na(finished), 0, finished), #turn NA's into 0 again [needed bc of merge above]
+           needs_reminder = as.numeric(case_when(
+                            wave==1 & t==0 & between(time_since_sent, -1, 13) == TRUE & finished == 0 ~ 1,
+                            wave==1 & t>0 & between(time_since_sent, -1, 14) == TRUE & finished == 0 ~ 1,
+                            wave>1 & between(time_since_sent, -1, 14) == TRUE & finished == 0 ~ 1))) %>%
+    mutate(needs_reminder = ifelse(is.na(needs_reminder) == TRUE, 0, needs_reminder)) #turn any NA's into 0 for future min/max functions
+  need_reminder_payment <- need_reminder_payment %>%
+    mutate(needs_payment = as.numeric(case_when(
+                            wave==1 & t==0 & completion_time>=-1 & completion_time<=13 & finished == 1 & time_since_sent>=14 ~ 1,
+                            wave==1 & t>0 & completion_time>=-1 & completion_time<=14 & finished == 1 & time_since_sent>=15 ~ 1,
+                            wave>1 & completion_time>=-1 & completion_time<=14 & finished == 1 & time_since_sent>=15 ~ 1))) %>%
+    mutate(needs_payment = ifelse(is.na(needs_payment) == TRUE, 0, needs_payment)) #turn any NA's into 0 for future min/max functions
 
 #Copy over the most conservative value of needreminder and needpayment, erring on the side of paying and not reminding. Take the SMALLEST value of 'needs_reminder' (NO<YES) and the LARGEST value of 'needs_payment' (NO<YES) and replace all rows for that entity_uuid-t combo with the corresponding value.
 need_reminder_payment <- need_reminder_payment %>% 
