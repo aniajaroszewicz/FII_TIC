@@ -1,6 +1,6 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 27 July 2021
+#Last updated: 16 Sept 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
@@ -153,9 +153,11 @@ need_reminderlink_payment <- left_join(need_reminder_payment, links, by=c("entit
 need_reminderlink_payment <- need_reminderlink_payment %>%
   mutate(unique_link=ifelse(needs_reminder==0, NA, unique_link))
 
-#Do a test to make sure there is consistency in reminder and link columns
-stopifnot(need_reminderlink_payment$needs_reminder==0 & is.na(need_reminderlink_payment$unique_link)==TRUE |
-            need_reminderlink_payment$needs_reminder==1 & is.na(need_reminderlink_payment$unique_link)==FALSE)
+#Do a test to make sure there is consistency in reminder and link columns for the wave and t at hand
+stopifnot((need_reminderlink_payment$needs_reminder==0 & is.na(need_reminderlink_payment$unique_link)==TRUE & need_reminderlink_payment$wave==wavenum & need_reminderlink_payment$t==tnum) |
+            (need_reminderlink_payment$needs_reminder==1 & is.na(need_reminderlink_payment$unique_link)==FALSE & need_reminderlink_payment$wave==wavenum & need_reminderlink_payment$t==tnum) |
+            need_reminderlink_payment$wave!=wavenum |
+            need_reminderlink_payment$t!=tnum)
 
 # EXPORT THE DATA ----
 
