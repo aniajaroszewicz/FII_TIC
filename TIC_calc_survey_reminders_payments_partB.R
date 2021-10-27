@@ -1,6 +1,6 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 16 Sept 2021
+#Last updated: 27 October 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
@@ -95,23 +95,25 @@ responses_all_uuids_sentdates <- responses_all_uuids_sentdates %>%
 
 # CALCULATE WHO NEEDS REMINDERS, WHO NEEDS PAYMENTS ----
 
-#Create a flag for if someone needs a reminder. If they didn't finish (meaning: they did not get to the last page [NOT "they don't have a recorded date"]), and today is <=14 days from the surveysentdate, then needs_reminder should be =Yes/1. Otherwise, it's =No/0. Also create a flag for if someone needs payment. If the survey is finished, and if the date on which the survey was completed was <= 14 days since it was sent, and if today is 15+ days since the wave-t email has been sent, needpayment=Yes/1. Otherwise, it's =No/0.  (Note that we're making a special exception for wave1 t0, which had a shorter than usual survey window of only 13 days.)
+#Create variables identifying the number of days it's been since a survey was sent (time_since_sent) and how many days the survey window was open for. Typically it'll be open for 14 days, but for logistical reasons occasionally it'll be shorter (e.g. wave1 t0 had a 13 day window; wave5 t0 and wave2 t3 both had 12 day windows)
 today() #Look at what "today" is; make sure is right
+need_reminder_payment <- responses_all_uuids_sentdates %>%
+  mutate(time_since_sent = as.numeric(today() - sent_date), #evaluates to NA if sent_date is missing (eg bc not yet sent)
+         finished = ifelse(is.na(finished), 0, finished), #turn NA's into 0 again [needed bc of merge above]
+         window_length = case_when(
+                         wave==1 & t==0 ~ 13,
+                         wave==2 & t==3 ~ 12, 
+                         wave==5 & t==0 ~ 12,
+                         TRUE ~ 14))
 
-  need_reminder_payment <- responses_all_uuids_sentdates %>%
-    mutate(time_since_sent = as.numeric(today() - sent_date), #evaluates to NA if sent_date is missing (eg bc not yet sent)
-           finished = ifelse(is.na(finished), 0, finished), #turn NA's into 0 again [needed bc of merge above]
-           needs_reminder = as.numeric(case_when(
-                            wave==1 & t==0 & between(time_since_sent, -1, 13) == TRUE & finished == 0 ~ 1,
-                            wave==1 & t>0 & between(time_since_sent, -1, 14) == TRUE & finished == 0 ~ 1,
-                            wave>1 & between(time_since_sent, -1, 14) == TRUE & finished == 0 ~ 1))) %>%
-    mutate(needs_reminder = ifelse(is.na(needs_reminder) == TRUE, 0, needs_reminder)) #turn any NA's into 0 for future min/max functions
-  need_reminder_payment <- need_reminder_payment %>%
-    mutate(needs_payment = as.numeric(case_when(
-                            wave==1 & t==0 & completion_time>=-1 & completion_time<=13 & finished == 1 & time_since_sent>=14 ~ 1,
-                            wave==1 & t>0 & completion_time>=-1 & completion_time<=14 & finished == 1 & time_since_sent>=15 ~ 1,
-                            wave>1 & completion_time>=-1 & completion_time<=14 & finished == 1 & time_since_sent>=15 ~ 1))) %>%
-    mutate(needs_payment = ifelse(is.na(needs_payment) == TRUE, 0, needs_payment)) #turn any NA's into 0 for future min/max functions
+#Calculate who needs a reminder (if they haven't finished and the survey window is still open) and who needs payment (if they have finished in the survey window and now that survey window is closed)
+need_reminder_payment <- need_reminder_payment %>%
+  mutate(needs_reminder = as.numeric(case_when(
+                          time_since_sent>=-1 & time_since_sent<=window_length & finished==0 ~ 1,
+                          TRUE ~ 0)), #for all other cases: needs_reminder=0
+        needs_payment = as.numeric(case_when(
+                        completion_time>=-1 & completion_time<=window_length & time_since_sent>window_length & finished==1 ~ 1,
+                        TRUE ~ 0))) #for all other cases: needs_payment=0
 
 #Copy over the most conservative value of needreminder and needpayment, erring on the side of paying and not reminding. Take the SMALLEST value of 'needs_reminder' (NO<YES) and the LARGEST value of 'needs_payment' (NO<YES) and replace all rows for that entity_uuid-t combo with the corresponding value.
 need_reminder_payment <- need_reminder_payment %>% 
@@ -127,16 +129,16 @@ need_reminder_payment <- need_reminder_payment %>%
   arrange(entity_uuid, t) %>%
   ungroup()
 
-#Do some tests: 
-stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & need_reminder_payment$finished==0 & need_reminder_payment$needs_reminder==1) |
-            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & need_reminder_payment$finished==1 & need_reminder_payment$needs_reminder==0) | 
-            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent>14 & need_reminder_payment$needs_reminder==0) |
+#Do some tests. Note that with the second one, the observations are all people who had sawlastpage=1, so the fact that they have a recorded date indicates that they must have actually finished.
+stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=need_reminder_payment$window_length & need_reminder_payment$finished==0 & need_reminder_payment$needs_reminder==1) |
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=need_reminder_payment$window_length & need_reminder_payment$finished==1 & need_reminder_payment$needs_reminder==0) | 
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent>need_reminder_payment$window_length & need_reminder_payment$needs_reminder==0) |
             is.na(need_reminder_payment$sent_date)==TRUE)
-stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & is.na(need_reminder_payment$recorded_date)==TRUE & need_reminder_payment$needs_reminder==1) |
-            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=14 & is.na(need_reminder_payment$recorded_date)==FALSE & need_reminder_payment$needs_reminder==0) | 
-            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent>14 & need_reminder_payment$needs_reminder==0) |
+stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=need_reminder_payment$window_length & is.na(need_reminder_payment$recorded_date)==TRUE & need_reminder_payment$needs_reminder==1) |
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent<=need_reminder_payment$window_length & is.na(need_reminder_payment$recorded_date)==FALSE & need_reminder_payment$needs_reminder==0) | 
+            (is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$time_since_sent>need_reminder_payment$window_length & need_reminder_payment$needs_reminder==0) |
             is.na(need_reminder_payment$sent_date)==TRUE)
-stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$finished==1 & need_reminder_payment$completion_time>=-1 & need_reminder_payment$completion_time<=14 & need_reminder_payment$time_since_sent>=15 & need_reminder_payment$needs_payment==1) |
+stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment$finished==1 & need_reminder_payment$completion_time>=-1 & need_reminder_payment$completion_time<=need_reminder_payment$window_length & need_reminder_payment$time_since_sent>need_reminder_payment$window_length & need_reminder_payment$needs_payment==1) |
             need_reminder_payment$needs_payment==0)
   
 
@@ -159,6 +161,7 @@ stopifnot((need_reminderlink_payment$needs_reminder==0 & is.na(need_reminderlink
             need_reminderlink_payment$wave!=wavenum |
             need_reminderlink_payment$t!=tnum)
 
+  
 # EXPORT THE DATA ----
 
 #Turn numeric variables to more user-friendly "yes" and "no" values
@@ -201,6 +204,9 @@ print(paste0("First survey completion: ", min(final_output_filtered$recorded_dat
 print(paste0("Last survey completion: ", max(final_output_filtered$recorded_date, na.rm=TRUE)))
 print(paste0("Number of people who do not need a reminder: ", sum(final_output_filtered$needs_reminder == "No")))
 print(paste0("Number of people who need a reminder: ", sum(final_output_filtered$needs_reminder == "Yes")))
+print(paste0("Percent of people who need a reminder: ", (round(100*sum(final_output_filtered$needs_reminder == "Yes")/n_distinct(final_output_filtered$entity_uuid))), "%"))
 print(paste0("Number of people who do not need payment: ", sum(final_output_filtered$needs_payment == "No")))
 print(paste0("Number of people who need payment: ", sum(final_output_filtered$needs_payment == "Yes")))
+print(paste0("Percent of people who need payment: ", (round(100*sum(final_output_filtered$needs_payment == "Yes")/n_distinct(final_output_filtered$entity_uuid))), "%"))
 print("You're done! Now just check your folder for the files.")
+
