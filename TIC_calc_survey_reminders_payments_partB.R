@@ -1,6 +1,6 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 27 October 2021
+#Last updated: 29 November 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
@@ -103,7 +103,9 @@ need_reminder_payment <- responses_all_uuids_sentdates %>%
          window_length = case_when(
                          wave==1 & t==0 ~ 13,
                          wave==2 & t==3 ~ 12, 
+                         wave==3 & t==3 ~ 13,
                          wave==5 & t==0 ~ 12,
+                         wave==6 & t==0 ~ 13,
                          TRUE ~ 14))
 
 #Calculate who needs a reminder (if they haven't finished and the survey window is still open) and who needs payment (if they have finished in the survey window and now that survey window is closed)
