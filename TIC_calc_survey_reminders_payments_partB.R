@@ -181,9 +181,9 @@ need_reminderlink_payment <- need_reminderlink_payment %>%
 #Specify payment amount
 need_reminderlink_payment <- need_reminderlink_payment %>% 
   mutate(payment_amount=case_when(
-    needs_payment=="Yes" & t==0 ~ "$60",
-    needs_payment=="Yes" & t>0 & t<18 ~ "$40",
-    needs_payment=="Yes" & t==18 ~ "$100"))
+    needs_payment=="Yes" & t==0 ~ 60,
+    needs_payment=="Yes" & t>0 & t<18 ~ 40,
+    needs_payment=="Yes" & t==18 ~ 100))
 
 #Order the rows, select and order the columns, and export the whole file with today's date (yyyy-mm-dd)
 final_output <- need_reminderlink_payment %>%
