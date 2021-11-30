@@ -148,7 +148,7 @@ stopifnot((is.na(need_reminder_payment$sent_date)==FALSE & need_reminder_payment
 
 #Remove wave number from the links df since it's not needed
 links <- links %>%
-  select(-wave)
+  dplyr::select(-wave)
 
 #Join the list of people who need reminders and payments with the list of links
 need_reminderlink_payment <- left_join(need_reminder_payment, links, by=c("entity_uuid", "t"))
