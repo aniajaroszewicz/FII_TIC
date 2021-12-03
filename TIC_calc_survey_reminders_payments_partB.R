@@ -1,6 +1,6 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 29 November 2021
+#Last updated: 3 December 2021
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
@@ -185,8 +185,17 @@ need_reminderlink_payment <- need_reminderlink_payment %>%
     needs_payment=="Yes" & t>0 & t<18 ~ 40,
     needs_payment=="Yes" & t==18 ~ 100))
 
+#Clean up and add in the prior forfeitures (people who did not complete the t0 survey) to make it easy for Support to see everyone's data in one place
+forfeitures <- forfeitures %>%
+  mutate(payment_amount=NA,
+         sent_date=as.Date(sent_date),
+         recorded_date=as.Date(recorded_date))
+
+need_reminderlink_payment_forfeitures <- bind_rows(need_reminderlink_payment, forfeitures)
+
+
 #Order the rows, select and order the columns, and export the whole file with today's date (yyyy-mm-dd)
-final_output <- need_reminderlink_payment %>%
+final_output <- need_reminderlink_payment_forfeitures %>%
   arrange(wave, entity_uuid, t) %>% 
   dplyr::select(entity_uuid, wave, t, sent_date, finished, recorded_date, needs_reminder, unique_link, needs_payment, payment_amount) 
 todaysdate <- today()
