@@ -182,7 +182,10 @@ need_reminderlink_payment <- need_reminderlink_payment %>%
 need_reminderlink_payment <- need_reminderlink_payment %>% 
   mutate(payment_amount=case_when(
     needs_payment=="Yes" & t==0 ~ 60,
-    needs_payment=="Yes" & t>0 & t<18 ~ 40,
+    needs_payment=="Yes" & t>0 & t<=6 ~ 40,
+    needs_payment=="Yes" & t==9 ~ 45,
+    needs_payment=="Yes" & t==12 ~ 50,
+    needs_payment=="Yes" & t==15 ~ 55,
     needs_payment=="Yes" & t==18 ~ 100))
 
 #Clean up and add in the prior forfeitures (people who did not complete the t0 survey) to make it easy for Support to see everyone's data in one place
