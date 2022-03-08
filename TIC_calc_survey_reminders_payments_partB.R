@@ -1,6 +1,6 @@
 #UpTogether TIC: Pulling data from Qualtrics to identify who needs reminders and who needs to be paid for survey completion in the Trust & Invest Collaborative (TIC) study
 #Ania Jaroszewicz (ajaroszewicz@hbs.edu) 
-#Last updated: 3 December 2021
+#Last updated: 8 March 2022
 
 
 #Overview: This file should be run in conjunction with TIC_calc_survey_reminders_payments_partA_[date].R (sent to the UpTogether survey admin team). 
@@ -186,7 +186,7 @@ need_reminderlink_payment <- need_reminderlink_payment %>%
     needs_payment=="Yes" & t==9 ~ 45,
     needs_payment=="Yes" & t==12 ~ 50,
     needs_payment=="Yes" & t==15 ~ 55,
-    needs_payment=="Yes" & t==18 ~ 100))
+    needs_payment=="Yes" & t==18 ~ 160))
 
 #Clean up and add in the prior forfeitures (people who did not complete the t0 survey) to make it easy for Support to see everyone's data in one place
 forfeitures <- forfeitures %>%
