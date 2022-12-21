@@ -12,8 +12,9 @@
 #(4) It outputs 2 CSV spreadsheets that show who needs a reminder (and, if they need a reminder, what survey link to use) and who needs a payment (and, if they need payment, how much). One of these shows all of the responses to date (with at most one entry per entity_uuid - t combination). The other one shows just the wave and t number that the user specified in partA.
 
 
-# CLEAN RAW QUALTRICS DATA: DELETE INVALID RESPONSES, UNWANTED VARIABLES  ----
-#Take the raw Qualtrics data that was run in Part A. Keep only observations that are not preview and test responses, those that are not missing an entity_uuid or t. Note that those who said they got the link from someone other than TIC/UT get routed in Qualtrics, and are pulled out below because they never "sawlastpage." 
+# CLEAN RAW QUALTRICS DATA: DELETE INVALID RESPONSES, UNWANTED VARIABLES; COMBINE WITH SHORT SURVEY  ----
+
+#Take the raw Qualtrics data that was run in Part A. Keep only observations that are not preview and test responses, those that are not missing an entity_uuid or t. 
 survey_responses <- raw_survey_responses %>% 
   filter(Status!="Survey Preview" & entity_uuid!="NA" & t!="NA")
 
@@ -25,8 +26,19 @@ survey_responses <- survey_responses %>%
          recorded_datetime = RecordedDate) %>%
   mutate(finished = ifelse(is.na(finished), 0, 1)) 
 
+#Now repeat the coarse cleaning for the short survey
+survey_responses_short <- raw_survey_responses_short %>%
+  dplyr::select(entity_uuid,
+                t,
+                finished = sawlastpage,
+                recorded_datetime = RecordedDate) %>%
+  mutate(finished = ifelse(is.na(finished), 0, 1)) 
+
+#Bind the two datasets you downloaded in Part A (the regular survey and the short survey for non-responders).
+survey_responses_both <- bind_rows(survey_responses, survey_responses_short)
+
 #Remove people who never saw the last page, either because they started and didn't finish, or because they said they got the link from someone other than UT and then got kicked out (note that this latter group has a recorded date, but they didn't take the full survey)
-survey_responses <- survey_responses %>%
+survey_responses_both <- survey_responses_both %>%
   filter(finished==1)
 
 #Pull out just the date from the recorded datetime variable; arrange
