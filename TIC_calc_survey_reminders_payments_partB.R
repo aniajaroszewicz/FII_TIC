@@ -42,7 +42,7 @@ survey_responses_both <- survey_responses_both %>%
   filter(finished==1)
 
 #Pull out just the date from the recorded datetime variable; arrange
-survey_responses <- survey_responses %>% 
+survey_responses_both <- survey_responses_both %>% 
   mutate(recorded_date=as_date(recorded_datetime)) %>%
   arrange(entity_uuid, t, recorded_date)
 
@@ -79,7 +79,7 @@ valid_uuids$t <- case_when(
 ) #replaces the temprownum variable with the t variable values we'll ultimately want
 
 # Join the datasets. If survey_responses has more than 1 response for a given entity_uuid-t combo, then ALL rows are kept. If there are no responses for a given entity_uuid-t combo, then the recordeddate is just NA.
-responses_all_uuids <- full_join(survey_responses, valid_uuids, by = c("entity_uuid", "t"))
+responses_all_uuids <- full_join(survey_responses_both, valid_uuids, by = c("entity_uuid", "t"))
 
 #Someone might have a survey response but not actually be in the study if there was a test or a typo. Delete anyone who took the survey who is not on the valid_uuids list; this is equivalent to saying: delete anyone who does not have a wave value associated with them. 
 responses_all_uuids <- responses_all_uuids %>%
