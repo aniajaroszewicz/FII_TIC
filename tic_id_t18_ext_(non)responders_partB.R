@@ -53,7 +53,6 @@ ppltonudge_links <- ppltonudge_links %>%
   arrange(wave, lastcompletedsurvey, entity_uuid) 
 
 #Print some summary messages for easy data checking: 
-print(paste0("For wave", wavenum, " and t", tnum, ":"))
 print(paste0("Number of wave1 people who need a reminder: ", sum(ppltonudge_links$wave == 1)))
 print(paste0("Number of wave2 people who need a reminder: ", sum(ppltonudge_links$wave == 2)))
 print(paste0("Number of wave3 people who need a reminder: ", sum(ppltonudge_links$wave == 3)))
