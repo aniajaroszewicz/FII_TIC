@@ -14,12 +14,6 @@
 
 ####IDENTIFY WHO STILL NEEDS TO BE NUDGED TO COMPLETE THEIR SHORT T18 SURVEY ----
 
-#Assess what the current breakdown is of last completed survey
-callingpriorities %>%
-  group_by(lastcompletedsurvey) %>%
-  summarise(count = n()) %>%
-  print(n=1000)
-
 #Slim down: only keep people who are eligible to get the short t18 survey: people who have not completed a survey since t6 or earlier. 
 callingpriorities2 <- callingpriorities %>%
   filter(lastcompletedsurvey<=6) 
