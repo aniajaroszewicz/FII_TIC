@@ -57,5 +57,5 @@ print(paste0("Total number of people who need a reminder: ", nrow(ppltonudge_lin
 print("You're done! Now just check your folder for the file.")
 
 todaysdate <- today()
-filename <- paste0("t18_nonresponders_as_of_", todaysdate, ".xls")
-WriteXLS(ppltonudge_links, filename)
+filename <- paste0("t18_nonresponders_as_of_", todaysdate, ".csv")
+write_csv(ppltonudge_links, filename)
