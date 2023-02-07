@@ -1,6 +1,6 @@
 #TIC - Creating a list of people who have not yet responded to their (extended-deadline) t18 survey
 #Ania Jaroszewicz
-#Last updated: 4 Feb 2023
+#Last updated: 7 Feb 2023
 
 #Purpose: We are inviting TIC participants who (a) have not responded for the last year; and (b) have not completed their t18 survey during the regular survey window or thereafter; to complete their t18 survey (specifically, the "short" 15 min version) within an extended time period. This file identifies the most recent list of people who meet the (a) and (b) criteria above so we know who to nudge to complete the survey. It does this by starting with the calling_priorities.csv spreadsheet, slimming it down to focus on the people who have not completed any surveys *on time* since t0, t3, or t6, and then REMOVES anyone who has completed the short t18 survey outside the standard window. Finally, it outputs a file of everyone who meets this criteria (across all the waves). These are the people who should be prioritized in the data acquisition efforts (calling them, SMS/email, sending postcards). 
 #The code runs as a construction of 2 files. This is Part B, and is called in the Part A (and Part AC) code.
@@ -53,8 +53,9 @@ print(paste0("Number of wave3 people who need a reminder: ", sum(ppltonudge_link
 print(paste0("Number of wave4 people who need a reminder: ", sum(ppltonudge_links$wave == 4)))
 print(paste0("Number of wave5 people who need a reminder: ", sum(ppltonudge_links$wave == 5)))
 print(paste0("Number of wave6 people who need a reminder: ", sum(ppltonudge_links$wave == 6)))
+print(paste0("Total number of people who need a reminder: ", nrow(ppltonudge_links)))
 print("You're done! Now just check your folder for the file.")
 
 todaysdate <- today()
-filename <- paste0("t18_nonresponders_as_of_", todaysdate, ".xlsx")
+filename <- paste0("t18_nonresponders_as_of_", todaysdate, ".xls")
 WriteXLS(ppltonudge_links, filename)
