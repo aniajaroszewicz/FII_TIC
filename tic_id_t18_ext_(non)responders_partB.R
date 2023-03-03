@@ -1,6 +1,6 @@
 #TIC - Creating a list of people who have not yet responded to their (extended-deadline) t18 survey
 #Ania Jaroszewicz
-#Last updated: 15 Feb 2023
+#Last updated: 3 March 2023
 
 #Purpose: We are inviting TIC participants who have not responded for the last year to complete a shortened (15 min) t18 survey. These folks are invited to do so during the regular survey window, but if they don't complete it then, they get an extended window of another 5ish weeks. This file identifies (1) the people who successfully completed the short t18 survey outside the standard window (and thus needs to be paid on a special schedule); and (2) the people who have not [yet] completed the survey (across all the waves) and thus need to be prioritized in the data acquisition efforts (calling them, SMS/email, sending postcards). The final output is a spreadsheet of all participants across all waves who were invited to do the short t18 survey in the extended time period
 #The code runs as a construction of 2 files. This is Part B, and is called in the Part A code.
@@ -52,7 +52,7 @@ callingpriorities2_survey2 <- callingpriorities2_survey2 %>%
 #Different waves have different t18 extension deadlines. Add those deadlines in. 
 callingpriorities2_survey3 <- callingpriorities2_survey2 %>%
   mutate(deadline=case_when(
-        wave==1 | wave==2 ~ as_date("2023-03-01"),
+        wave==1 | wave==2 ~ as_date("2023-03-14"),
         wave==3 | wave==4 ~ as_date("2023-05-01"),
         wave==5 | wave==6 ~ as_date("2023-07-01")))
         
@@ -133,11 +133,15 @@ need_reminder_payment <- left_join(callingpriorities2_survey3_sentdate_xpaid, li
 need_reminder_payment <- need_reminder_payment %>%
   mutate(unique_link=if_else(needs_reminder=="No", "NA", unique_link))
 
+#Remove recorded dates for anyone who does not need payment (to avoid confusion) (these are people who started the survey but didn't finish it, and eventually Qualtrics closed their survey and time stamped a recorded date)
+need_reminder_payment <- need_reminder_payment %>%
+  mutate(recorded_date = if_else(needs_payment == "No", as_date(NA), recorded_date))
+
 
 ####DO SOME TESTS ----
 
-#Confirm that everyone either needs a reminder (but no payment), needs a payment (but no reminder), or it's too early for them
-stopifnot((need_reminder_payment$needs_reminder=="Yes" & need_reminder_payment$needs_payment=="No") | (need_reminder_payment$needs_reminder=="No" & need_reminder_payment$needs_payment=="Yes") | is.na(need_reminder_payment$regt18_sent_date) | today()<need_reminder_payment$regopenwindow)
+#Confirm that everyone either needs a reminder (but no payment), needs a payment (but no reminder), or it's too early for them, or their deadline has passed and they didn't do it
+stopifnot((need_reminder_payment$needs_reminder=="Yes" & need_reminder_payment$needs_payment=="No") | (need_reminder_payment$needs_reminder=="No" & need_reminder_payment$needs_payment=="Yes") | is.na(need_reminder_payment$regt18_sent_date) | today()<need_reminder_payment$regopenwindow | (need_reminder_payment$needs_reminder=="No" & need_reminder_payment$needs_payment=="No" & today()>need_reminder_payment$deadline))
 
 #Confirm that everyone who needs a reminder has a link, but no one else does
 stopifnot((need_reminder_payment$needs_reminder=="Yes" & !is.na(need_reminder_payment$unique_link)) | (need_reminder_payment$needs_reminder=="No" & need_reminder_payment$unique_link=="NA"))
@@ -162,7 +166,10 @@ need_reminder_payment <- need_reminder_payment %>%
 #Clean up
 need_reminder_payment <- need_reminder_payment %>%
   dplyr::select(entity_uuid, wave, t, finished, recorded_date, needs_reminder, unique_link, needs_payment, payment_amount) %>%
-  arrange(wave, entity_uuid)
+  arrange(wave, entity_uuid) %>%
+  mutate(finished=case_when(
+    finished==0 ~ "No",
+    finished==1 ~ "Yes"))
 
 
 #Print some summary messages for easy data checking: 
